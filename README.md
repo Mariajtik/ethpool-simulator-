@@ -35,7 +35,7 @@ Este simulador demonstra conhecimento profundo de:
 
 ```bash
 # Clone o repositório
-git clone https://github.com/SEU_USERNAME/ethpool-simulator.git
+git clone https://github.com/Mariajtik/ethpool-simulator.git
 
 # Entre na pasta
 cd ethpool-simulator
