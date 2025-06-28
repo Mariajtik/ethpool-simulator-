@@ -1,4 +1,50 @@
+# 🚀 EthPool Simulator
 
+> **Advanced Ethereum Transaction Pool Visualization & MEV Analytics**
+
+![Ethereum](https://img.shields.io/badge/Ethereum-3C3C3D?style=for-the-badge&logo=Ethereum&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+
+## ✨ Funcionalidades
+
+- 🔄 **Pool de Transações em Tempo Real** - Visualize transações pendentes com preços de gas dinâmicos
+- 💰 **Oportunidades MEV** - Rastreie arbitragem, ataques sandwich e liquidações
+- ⛏️ **Processamento de Blocos** - Simule criação de blocos Ethereum e confirmação de transações
+- 📈 **Analytics de Gas** - Monitore tendências e preveja preços futuros de gas
+- 🎮 **Controles Interativos** - Ajuste parâmetros da simulação em tempo real
+
+## 🎯 Demonstração
+
+Este simulador demonstra conhecimento profundo de:
+- Ciclo de vida das transações Ethereum
+- Dinâmica de preços de gas e EIP-1559
+- Conceitos de MEV (Maximal Extractable Value)
+- Produção de blocos e ordenação de transações
+- Infraestrutura blockchain do mundo real
+
+## 🛠️ Tecnologias
+
+- **React 18** com TypeScript
+- **Next.js 14** para performance otimizada
+- **Tailwind CSS** para estilização moderna
+- **Lucide React** para ícones lindos
+
+## 🚀 Como Rodar
+
+```bash
+# Clone o repositório
+git clone https://github.com/SEU_USERNAME/ethpool-simulator.git
+
+# Entre na pasta
+cd ethpool-simulator
+
+# Instale dependências
+npm install
+
+# Rode o servidor de desenvolvimento
+npm run dev
 🚀 EthPool Simulator
 
 > Advanced Ethereum Transaction Pool Visualization & MEV Analytics
@@ -8,15 +54,15 @@
 !TypeScript  
 !Next.js
 
-✨ Features
+## ✨ Features
 
-- 🔄 Real-Time Transaction Pool – Visualize pending transactions with dynamic gas prices  
-- 💰 MEV Opportunities – Track arbitrage, sandwich attacks, and liquidations  
-- ⛏️ Block Processing – Simulate Ethereum block creation and transaction confirmation  
-- 📈 Gas Analytics – Monitor trends and predict future gas prices  
-- 🎮 Interactive Controls – Adjust simulation parameters in real time
+- 🔄 **Real-Time Transaction Pool** – Visualize pending transactions with dynamic gas prices  
+- 💰 **MEV Opportunities** – Track arbitrage, sandwich attacks, and liquidations  
+- ⛏️ **Block Processing** – Simulate Ethereum block creation and transaction confirmation  
+- 📈 **Gas Analytics** – Monitor trends and predict future gas prices  
+- 🎮 **Interactive Controls** – Adjust simulation parameters in real time
 
-🎯 Demonstration
+## 🎯 Demonstration
 
 This simulator demonstrates deep knowledge of:
 - Ethereum transaction lifecycle  
@@ -25,16 +71,16 @@ This simulator demonstrates deep knowledge of:
 - Block production and transaction ordering  
 - Real-world blockchain infrastructure
 
-🛠️ Technologies
+## 🛠️ Technologies
 
-- React 18 with TypeScript  
-- Next.js 14 for optimized performance  
-- Tailwind CSS for modern styling  
-- Lucide React for beautiful icons
+- **React 18** with TypeScript  
+- **Next.js 14** for optimized performance  
+- **Tailwind CSS** for modern styling  
+- **Lucide React** for beautiful icons
 
-🚀 How to Run
+## 🚀 How to Run
 
-`bash
+```bash
 
 Clone the repository
 git clone https://github.com/Mariajtik/ethpool-simulator.git
@@ -47,4 +93,3 @@ npm install
 
 Run the development server
 npm run dev
-`
