@@ -21,7 +21,5 @@ A lightweight Ethereum transaction pool simulator that runs directly in your bro
 ## For Developers
 This is a self-contained HTML application with no dependencies. Simply open index.html in any browser to run.
 
-## Screenshot
-![Simulator Screenshot](screenshot.png)
 
 > **Note**: For the full experience with advanced visualizations, open on a desktop computer.
