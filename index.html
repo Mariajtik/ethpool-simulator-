@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EthPool Simulator</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'eth-green': '#10B981',
+            'eth-blue': '#3B82F6',
+            'eth-amber': '#F59E0B',
+            'eth-red': '#EF4444',
+            'eth-purple': '#8B5CF6',
+            'eth-pink': '#EC4899',
+          },
+          backgroundImage: {
+            'gradient-eth': 'linear-gradient(to bottom right, #111827, #1e3a8a, #4f46e5)',
+          }
+        },
+      },
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #111827, #1e3a8a, #4f46e5);
+      color: white;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    
+    .tx-bubble {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.7rem;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .tx-bubble:hover {
+      transform: scale(1.1);
+      border-color: rgba(255,255,255,0.5);
+      z-index: 10;
+    }
+    
+    .card {
+      background: rgba(30, 41, 59, 0.5);
+      backdrop-filter: blur(10px);
+      border-radius: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .stats-card {
+      transition: all 0.3s ease;
+    }
+    
+    .stats-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .pool-container {
+      position: relative;
+      height: 300px;
+      background: linear-gradient(to bottom right, rgba(17, 24, 39, 0.5), rgba(30, 58, 138, 0.2));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+    
+    .utilization-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(to right, #10B981, #3B82F6);
+    }
+    
+    @media (min-width: 768px) {
+      .pool-container {
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+<body class="p-4 md:p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6 md:mb-8 text-center">
+      <h1 class="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+        EthPool Simulator
+      </h1>
+      <p class="text-gray-300 text-base md:text-lg">
+        Ethereum Transaction Pool Visualization & MEV Analytics
+      </p>
+    </div>
+
+    <!-- Controls -->
+    <div class="flex flex-wrap gap-3 mb-6 justify-center">
+      <button id="startBtn" class="flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold transition-all bg-green-600 hover:bg-green-700">
+        <i class="fas fa-play"></i>
+        Start Simulation
+      </button>
+      
+      <button id="resetBtn" class="flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-gray-600 hover:bg-gray-700 rounded-lg font-semibold transition-all">
+        <i class="fas fa-redo"></i>
+        Reset
+      </button>
+
+      <div class="flex items-center gap-3 bg-gray-800/50 rounded-lg px-3 md:px-4 py-2">
+        <label class="text-xs md:text-sm">Gas Price:</label>
+        <input
+          id="gasSlider"
+          type="range"
+          min="5"
+          max="100"
+          value="20"
+          class="w-16 md:w-20"
+        />
+        <span id="gasValue" class="text-xs md:text-sm font-mono">20 gwei</span>
+      </div>
+    </div>
+
+    <!-- Stats Dashboard -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div class="stats-card card p-3 md:p-4">
+        <div class="flex items-center gap-2 mb-1 md:mb-2">
+          <i class="fas fa-chart-line text-green-400"></i>
+          <span class="text-xs md:text-sm text-gray-400">Avg Gas Price</span>
+        </div>
+        <div id="avgGas" class="text-xl md:text-2xl font-bold text-green-400">20 gwei</div>
+      </div>
+      
+      <div class="stats-card card p-3 md:p-4">
+        <div class="flex items-center gap-2 mb-1 md:mb-2">
+          <i class="fas fa-bolt text-blue-400"></i>
+          <span class="text-xs md:text-sm text-gray-400">Pending Txs</span>
+        </div>
+        <div id="pendingTxs" class="text-xl md:text-2xl font-bold text-blue-400">0</div>
+      </div>
+      
+      <div class="stats-card card p-3 md:p-4">
+        <div class="flex items-center gap-2 mb-1 md:mb-2">
+          <i class="fas fa-eye text-yellow-400"></i>
+          <span class="text-xs md:text-sm text-gray-400">MEV Opportunities</span>
+        </div>
+        <div id="mevOps" class="text-xl md:text-2xl font-bold text-yellow-400">0</div>
+      </div>
+      
+      <div class="stats-card card p-3 md:p-4">
+        <div class="flex items-center gap-2 mb-1 md:mb-2">
+          <i class="fas fa-chart-pie text-purple-400"></i>
+          <span class="text-xs md:text-sm text-gray-400">Block Utilization</span>
+        </div>
+        <div id="blockUtil" class="text-xl md:text-2xl font-bold text-purple-400">0%</div>
+      </div>
+    </div>
+
+    <!-- Main Visualization -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+      <!-- Transaction Pool -->
+      <div class="lg:col-span-2 card p-4 md:p-6">
+        <h2 class="text-lg md:text-xl font-bold mb-3 md:mb-4 flex items-center gap-2">
+          <i class="fas fa-water text-blue-400"></i>
+          Transaction Pool
+          <span id="pendingCount" class="text-xs md:text-sm text-gray-400 ml-2">(0 pending)</span>
+        </h2>
+        
+        <div class="pool-container" id="poolVisualization">
+          <div class="absolute inset-0 flex items-center justify-center text-gray-500" id="emptyState">
+            <div class="text-center">
+              <i class="fas fa-water opacity-50 mb-2" style="font-size: 2.5rem;"></i>
+              <p>No pending transactions</p>
+              <p class="text-xs md:text-sm">Start simulation to see transactions</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="mt-4 flex flex-wrap gap-3 justify-center">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-eth-green"></div>
+            <span class="text-xs text-gray-300">Transfer</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-eth-blue"></div>
+            <span class="text-xs text-gray-300">DEX Swap</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-eth-amber"></div>
+            <span class="text-xs text-gray-300">Arbitrage</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-eth-red"></div>
+            <span class="text-xs text-gray-300">Liquidation</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Side Panel -->
+      <div class="space-y-4 md:space-y-6">
+        <!-- Current Block -->
+        <div class="card p-4 md:p-6">
+          <h3 class="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
+            <i class="fas fa-cube text-green-400"></i>
+            Latest Block <span id="blockNumber">#0</span>
+          </h3>
+          
+          <div class="space-y-2">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-400">Transactions:</span>
+              <span id="blockTxs" class="font-mono">0</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-400">Gas Used:</span>
+              <span id="gasUsed" class="font-mono">0M</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-400">Base Fee:</span>
+              <span id="baseFee" class="font-mono">0 gwei</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-400">MEV Value:</span>
+              <span id="mevValue" class="font-mono text-yellow-400">0.00 ETH</span>
+            </div>
+          </div>
+
+          <!-- Block utilization bar -->
+          <div class="mt-3">
+            <div class="flex justify-between text-xs md:text-sm mb-1">
+              <span class="text-gray-400">Block Utilization</span>
+              <span id="utilPercent">0%</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-2">
+              <div id="utilizationBar" class="utilization-bar h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MEV Opportunities -->
+        <div class="card p-4 md:p-6">
+          <h3 class="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
+            <i class="fas fa-eye text-yellow-400"></i>
+            MEV Opportunities
+          </h3>
+          
+          <div class="space-y-2 max-h-48 overflow-y-auto" id="mevList">
+            <div class="text-center text-gray-500 py-4">
+              <i class="fas fa-search opacity-50 mb-2" style="font-size: 1.5rem;"></i>
+              <p class="text-xs md:text-sm">No MEV opportunities detected</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gas Price Prediction -->
+        <div class="card p-4 md:p-6">
+          <h3 class="text-base md:text-lg font-bold mb-3 flex items-center gap-2">
+            <i class="fas fa-chart-line text-blue-400"></i>
+            Gas Price Trends
+          </h3>
+          
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-400">Current Base:</span>
+              <span id="currentGas" class="font-mono">20 gwei</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Average:</span>
+              <span id="avgGasPrice" class="font-mono">20 gwei</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Next Block Est:</span>
+              <span id="nextGas" class="font-mono text-green-400">20 gwei</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-6 md:mt-8 text-center text-gray-500 text-xs md:text-sm">
+      <p>EthPool Simulator - Advanced Ethereum Transaction Pool Visualization</p>
+      <p>Built for demonstrating deep understanding of Ethereum infrastructure and MEV dynamics</p>
+    </div>
+  </div>
+
+  <script>
+    // Configurações do simulador
+    const txTypes = [
+      { type: 'transfer', label: 'Transfer', color: '#10B981', gasLimit: 21000, priority: 1 },
+      { type: 'swap', label: 'DEX Swap', color: '#3B82F6', gasLimit: 150000, priority: 2 },
+      { type: 'arbitrage', label: 'Arbitrage', color: '#F59E0B', gasLimit: 300000, priority: 3 },
+      { type: 'liquidation', label: 'Liquidation', color: '#EF4444', gasLimit: 400000, priority: 4 }
+    ];
+    
+    // Variáveis de estado
+    let isRunning = false;
+    let transactions = [];
+    let blocks = [];
+    let currentBlock = null;
+    let gasPrice = 20;
+    let blockInterval;
+    let txInterval;
+    let blockCounter = 0;
+    
+    // Elementos DOM
+    const poolContainer = document.getElementById('poolVisualization');
+    const emptyState = document.getElementById('emptyState');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const gasSlider = document.getElementById('gasSlider');
+    const gasValue = document.getElementById('gasValue');
+    const pendingCount = document.getElementById('pendingCount');
+    const pendingTxs = document.getElementById('pendingTxs');
+    const mevOps = document.getElementById('mevOps');
+    const blockUtil = document.getElementById('blockUtil');
+    const avgGas = document.getElementById('avgGas');
+    const mevList = document.getElementById('mevList');
+    const blockNumber = document.getElementById('blockNumber');
+    const blockTxs = document.getElementById('blockTxs');
+    const gasUsed = document.getElementById('gasUsed');
+    const baseFee = document.getElementById('baseFee');
+    const mevValue = document.getElementById('mevValue');
+    const utilPercent = document.getElementById('utilPercent');
+    const utilizationBar = document.getElementById('utilizationBar');
+    const currentGas = document.getElementById('currentGas');
+    const avgGasPrice = document.getElementById('avgGasPrice');
+    const nextGas = document.getElementById('nextGas');
+    
+    // Gerar transação aleatória
+    function generateTransaction() {
+      const txType = txTypes[Math.floor(Math.random() * txTypes.length)];
+      const baseGas = gasPrice + (Math.random() - 0.5) * 10;
+      const priorityFee = txType.priority * 2 + Math.random() * 5;
+      
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        type: txType.type,
+        label: txType.label,
+        color: txType.color,
+        gasPrice: Math.max(1, (baseGas + priorityFee).toFixed(1)),
+        gasLimit: txType.gasLimit,
+        value: (Math.random() * 10).toFixed(2),
+        status: 'pending'
+      };
+    }
+    
+    // Renderizar transação na pool
+    function renderTransaction(tx) {
+      const bubble = document.createElement('div');
+      bubble.className = 'tx-bubble';
+      bubble.innerHTML = tx.gasPrice;
+      bubble.style.backgroundColor = tx.color;
+      bubble.style.width = `${Math.max(30, Math.min(50, tx.gasPrice * 1.5))}px`;
+      bubble.style.height = bubble.style.width;
+      bubble.style.left = `${Math.random() * 90 + 5}%`;
+      bubble.style.top = `${Math.random() * 80 + 10}%`;
+      bubble.dataset.id = tx.id;
+      
+      bubble.addEventListener('click', () => {
+        alert(`${tx.label}\nGas Price: ${tx.gasPrice} gwei\nValue: ${tx.value} ETH`);
+      });
+      
+      poolContainer.appendChild(bubble);
+      return bubble;
+    }
+    
+    // Atualizar estatísticas
+    function updateStats() {
+      const pending = transactions.filter(tx => tx.status === 'pending');
+      const pendingCountValue = pending.length;
+      const mevCount = pending.filter(tx => ['arbitrage', 'liquidation'].includes(tx.type)).length;
+      
+      const avgGasValue = pendingCountValue > 0 ? 
+        (pending.reduce((sum, tx) => sum + parseFloat(tx.gasPrice), 0) / pendingCountValue).toFixed(1) : 
+        gasPrice;
+      
+      pendingCount.textContent = `(${pendingCountValue} pending)`;
+      pendingTxs.textContent = pendingCountValue;
+      mevOps.textContent = mevCount;
+      avgGas.textContent = `${avgGasValue} gwei`;
+      currentGas.textContent = `${gasPrice} gwei`;
+      avgGasPrice.textContent = `${avgGasValue} gwei`;
+      nextGas.textContent = `${(parseFloat(avgGasValue) * 0.95).toFixed(1)} gwei`;
+      
+      // Atualizar lista de MEV
+      if (mevCount > 0) {
+        mevList.innerHTML = '';
+        pending.filter(tx => ['arbitrage', 'liquidation'].includes(tx.type))
+          .slice(0, 5)
+          .forEach(tx => {
+            const mevItem = document.createElement('div');
+            mevItem.className = 'flex items-center justify-between p-2 bg-gray-700/30 rounded text-sm';
+            mevItem.innerHTML = `
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-full" style="background-color: ${tx.color}"></div>
+                <span>${tx.label}</span>
+              </div>
+              <div class="text-right">
+                <div class="font-mono">${tx.gasPrice} gwei</div>
+                <div class="text-xs text-yellow-400">${tx.value} ETH</div>
+              </div>
+            `;
+            mevList.appendChild(mevItem);
+          });
+      } else if (mevList.children.length === 0) {
+        mevList.innerHTML = `
+          <div class="text-center text-gray-500 py-4">
+            <i class="fas fa-search opacity-50 mb-2" style="font-size: 1.5rem;"></i>
+            <p class="text-xs md:text-sm">No MEV opportunities detected</p>
+          </div>
+        `;
+      }
+    }
+    
+    // Processar bloco
+    function processBlock() {
+      const pending = transactions.filter(tx => tx.status === 'pending');
+      if (pending.length === 0) return;
+      
+      // Ordenar por gasPrice (maior primeiro)
+      const sorted = [...pending].sort((a, b) => b.gasPrice - a.gasPrice);
+      const blockTxsCount = Math.min(10, sorted.length);
+      const blockTransactions = sorted.slice(0, blockTxsCount);
+      
+      // Criar novo bloco
+      blockCounter++;
+      currentBlock = {
+        number: blockCounter,
+        transactions: blockTransactions,
+        gasUsed: blockTransactions.reduce((sum, tx) => sum + tx.gasLimit, 0),
+        gasLimit: 30000000,
+        baseFeePerGas: gasPrice,
+        mevValue: blockTransactions
+          .filter(tx => ['arbitrage', 'liquidation'].includes(tx.type))
+          .reduce((sum, tx) => sum + parseFloat(tx.value), 0).toFixed(2)
+      };
+      
+      blocks.push(currentBlock);
+      if (blocks.length > 5) blocks.shift();
+      
+      // Atualizar DOM do bloco
+      blockNumber.textContent = `#${currentBlock.number}`;
+      blockTxs.textContent = currentBlock.transactions.length;
+      gasUsed.textContent = `${(currentBlock.gasUsed / 1000000).toFixed(1)}M`;
+      baseFee.textContent = `${currentBlock.baseFeePerGas} gwei`;
+      mevValue.textContent = `${currentBlock.mevValue} ETH`;
+      
+      const utilization = Math.round((currentBlock.gasUsed / currentBlock.gasLimit) * 100);
+      utilPercent.textContent = `${utilization}%`;
+      utilizationBar.style.width = `${utilization}%`;
+      blockUtil.textContent = `${utilization}%`;
+      
+      // Marcar transações como confirmadas
+      transactions.forEach(tx => {
+        if (blockTransactions.some(btx => btx.id === tx.id)) {
+          tx.status = 'confirmed';
+          // Remover bolha da visualização
+          const bubble = document.querySelector(`.tx-bubble[data-id="${tx.id}"]`);
+          if (bubble) {
+            bubble.style.transform = 'scale(0)';
+            setTimeout(() => bubble.remove(), 300);
+          }
+        }
+      });
+    }
+    
+    // Iniciar simulação
+    function startSimulation() {
+      if (isRunning) return;
+      isRunning = true;
+      startBtn.innerHTML = '<i class="fas fa-pause"></i> Pause Simulation';
+      startBtn.classList.remove('bg-green-600');
+      startBtn.classList.add('bg-red-600');
+      
+      // Esconder estado vazio
+      emptyState.style.display = 'none';
+      
+      // Gerar transações
+      txInterval = setInterval(() => {
+        const newTx = generateTransaction();
+        transactions.push(newTx);
+        renderTransaction(newTx);
+        updateStats();
+      }, 500 + Math.random() * 1000);
+      
+      // Processar blocos
+      blockInterval = setInterval(processBlock, 10000);
+    }
+    
+    // Parar simulação
+    function stopSimulation() {
+      isRunning = false;
+      startBtn.innerHTML = '<i class="fas fa-play"></i> Start Simulation';
+      startBtn.classList.remove('bg-red-600');
+      startBtn.classList.add('bg-green-600');
+      
+      clearInterval(txInterval);
+      clearInterval(blockInterval);
+    }
+    
+    // Reiniciar simulação
+    function resetSimulation() {
+      stopSimulation();
+      
+      // Limpar transações
+      transactions = [];
+      blocks = [];
+      currentBlock = null;
+      blockCounter = 0;
+      
+      // Limpar visualização
+      poolContainer.innerHTML = '';
+      poolContainer.appendChild(emptyState);
+      emptyState.style.display = 'flex';
+      
+      // Resetar estatísticas
+      pendingCount.textContent = '(0 pending)';
+      pendingTxs.textContent = '0';
+      mevOps.textContent = '0';
+      blockUtil.textContent = '0%';
+      avgGas.textContent = '20 gwei';
+      blockNumber.textContent = '#0';
+      blockTxs.textContent = '0';
+      gasUsed.textContent = '0M';
+      baseFee.textContent = '0 gwei';
+      mevValue.textContent = '0.00 ETH';
+      utilPercent.textContent = '0%';
+      utilizationBar.style.width = '0%';
+      currentGas.textContent = '20 gwei';
+      avgGasPrice.textContent = '20 gwei';
+      nextGas.textContent = '20 gwei';
+      
+      // Resetar lista MEV
+      mevList.innerHTML = `
+        <div class="text-center text-gray-500 py-4">
+          <i class="fas fa-search opacity-50 mb-2" style="font-size: 1.5rem;"></i>
+          <p class="text-xs md:text-sm">No MEV opportunities detected</p>
+        </div>
+      `;
+    }
+    
+    // Event Listeners
+    startBtn.addEventListener('click', () => {
+      if (isRunning) {
+        stopSimulation();
+      } else {
+        startSimulation();
+      }
+    });
+    
+    resetBtn.addEventListener('click', resetSimulation);
+    
+    gasSlider.addEventListener('input', () => {
+      gasPrice = parseInt(gasSlider.value);
+      gasValue.textContent = `${gasPrice} gwei`;
+      currentGas.textContent = `${gasPrice} gwei`;
+    });
+    
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', () => {
+      // Pré-carregar algumas transações para demonstração
+      for (let i = 0; i < 5; i++) {
+        const newTx = generateTransaction();
+        transactions.push(newTx);
+        renderTransaction(newTx);
+      }
+      updateStats();
+      emptyState.style.display = 'none';
+    });
+  </script>
+</body>
+  </html>
