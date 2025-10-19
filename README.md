@@ -2,7 +2,7 @@
 
 > **Advanced Ethereum Transaction Pool Visualization & MEV Analytics**
 
-[![Open in GitHub Pages](https://img.shields.io/badge/launch-demo-brightgreen)](https://mariajtik.github.io/ethpool-simulator/)
+[![Open in GitHub Pages](https://img.shields.io/badge/launch-demo-brightgreen)](https://mariajtik.github.io/ethpool-simulator-/)
 
 A lightweight Ethereum transaction pool simulator that runs directly in your browser.
 
